@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>اتاق خبرنگار - امیرخوان</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: Tahoma, sans-serif;
+    background: #f0f4f8;
+    padding: 16px;
+    direction: rtl;
+    color: #1e293b;
+  }
+  .container { max-width: 700px; margin: 0 auto; }
+  .header {
+    background: #ffffff;
+    padding: 16px 20px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border-bottom: 3px solid #2563eb;
+  }
+  .header h1 { font-size: 24px; color: #2563eb; }
+  .header p { font-size: 13px; color: #64748b; margin-top: 6px; }
+  .badge {
+    display:inline-block;
+    background:#fef3c7;
+    color:#92400e;
+    font-size:11px;
+    padding:3px 10px;
+    border-radius:20px;
+    margin-top:8px;
+    font-weight:600;
+  }
+
+  .card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  }
+
+  .upload-zone {
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 30px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+    background: #f8fafc;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: #2563eb;
+    background: #eff6ff;
+  }
+  .upload-zone .icon { font-size: 36px; margin-bottom: 8px; }
+  .upload-zone .text { font-size: 14px; color: #475569; }
+  .upload-zone .hint { font-size: 12px; color: #94a3b8; margin-top: 6px; }
+  #fileInput { display:none; }
+
+  .file-info {
+    display:none;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background:#eff6ff;
+    border-radius: 10px;
+    font-size: 13px;
+    color:#1e40af;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .file-info.show { display:flex; }
+
+  button#submitBtn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 14px;
+    border: none;
+    border-radius: 30px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  button#submitBtn:hover { background: #1d4ed8; }
+  button#submitBtn:disabled { opacity:.5; cursor:not-allowed; }
+
+  .status {
+    display:none;
+    text-align:center;
+    padding: 16px;
+    color:#64748b;
+    font-size: 14px;
+  }
+  .status.show { display:block; }
+  .spinner {
+    display:inline-block;
+    width:18px; height:18px;
+    border:3px solid #dbeafe;
+    border-top-color:#2563eb;
+    border-radius:50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align:middle;
+    margin-left:8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .result-box { display:none; margin-top: 10px; }
+  .result-box.show { display:block; }
+  .result-box textarea {
+    width:100%;
+    min-height:180px;
+    border:1px solid #e2e8f0;
+    border-radius:10px;
+    padding:12px;
+    background:#f8fafc;
+    color:#0f172a;
+    font-family:Tahoma, sans-serif;
+    font-size:14px;
+    line-height:1.8;
+    resize:vertical;
+  }
+  .result-box textarea:focus { outline:none; border-color:#2563eb; }
+
+  .copy-btn {
+    margin-top:10px;
+    padding: 10px 16px;
+    border:none;
+    border-radius:30px;
+    background:#f1f5f9;
+    color:#334155;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .copy-btn:hover { background:#e2e8f0; }
+
+  .error-box {
+    display:none;
+    background:#fdeceb;
+    color:#a3312a;
+    border:1px solid #f3c9c6;
+    border-radius:10px;
+    padding:12px;
+    margin-top:10px;
+    font-size:13px;
+  }
+  .error-box.show { display:block; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>🎙️ اتاق خبرنگار</h1>
+    <p>نسخه‌ی آزمایشی — تبدیل صوت مصاحبه به متن فارسی</p>
+    <span class="badge">⚠️ نسخه آزمایشی، نه نهایی</span>
+  </div>
+
+  <div class="card">
+    <div class="upload-zone" id="uploadZone">
+      <div class="icon">🎤</div>
+      <div class="text">برای آپلود فایل صوتی ضربه بزن</div>
+      <div class="hint">فرمت‌های مجاز: mp3, wav, m4a — حداکثر ۲۵ مگابایت</div>
+    </div>
+    <input type="file" id="fileInput" accept=".mp3,.wav,.m4a,audio/*">
+
+    <div class="file-info" id="fileInfo">
+      <span id="fileName"></span>
+      <span id="fileSize"></span>
+    </div>
+
+    <button id="submitBtn" disabled>📝 تبدیل به متن</button>
+
+    <div class="status" id="statusBox">
+      <span class="spinner"></span> در حال پردازش صوت... ممکن است کمی طول بکشد
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <div class="result-box" id="resultBox">
+      <textarea id="resultText" placeholder="متن پیاده‌شده اینجا نمایش داده می‌شود..."></textarea>
+      <button class="copy-btn" id="copyBtn">📋 کپی متن</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+const fileInfo = document.getElementById('fileInfo');
+const fileName = document.getElementById('fileName');
+const fileSize = document.getElementById('fileSize');
+const submitBtn = document.getElementById('submitBtn');
+const statusBox = document.getElementById('statusBox');
+const errorBox = document.getElementById('errorBox');
+const resultBox = document.getElementById('resultBox');
+const resultText = document.getElementById('resultText');
+const copyBtn = document.getElementById('copyBtn');
+
+let selectedFile = null;
+const MAX_SIZE = 25 * 1024 * 1024; // 25MB
+
+uploadZone.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files.length > 0) handleFile(e.target.files[0]);
+});
+
+function handleFile(file) {
+  errorBox.classList.remove('show');
+  if (file.size > MAX_SIZE) {
+    showError('حجم فایل بیش از ۲۵ مگابایت است. لطفاً فایل کوچک‌تری انتخاب کن.');
+    return;
+  }
+  selectedFile = file;
+  fileName.textContent = '🎵 ' + file.name;
+  fileSize.textContent = (file.size / (1024*1024)).toFixed(1) + ' MB';
+  fileInfo.classList.add('show');
+  submitBtn.disabled = false;
+}
+
+function showError(msg) {
+  errorBox.textContent = '⚠️ ' + msg;
+  errorBox.classList.add('show');
+}
+
+submitBtn.addEventListener('click', async () => {
+  if (!selectedFile) return;
+
+  submitBtn.disabled = true;
+  statusBox.classList.add('show');
+  errorBox.classList.remove('show');
+  resultBox.classList.remove('show');
+
+  try {
+    const formData = new FormData();
+    formData.append('audio', selectedFile);
+
+    const res = await fetch('/api/transcribe', {
+      method: 'POST',
+      body: formData
+    });
+
+    statusBox.classList.remove('show');
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      showError(errData.error || 'مشکلی در پردازش صوت پیش آمد. دوباره تلاش کن.');
+      submitBtn.disabled = false;
+      return;
+    }
+
+    const data = await res.json();
+    resultText.value = data.text || 'متنی دریافت نشد.';
+    resultBox.classList.add('show');
+
+  } catch (err) {
+    statusBox.classList.remove('show');
+    showError('خطا در اتصال به سرور. دوباره تلاش کن.');
+  }
+
+  submitBtn.disabled = false;
+});
+
+copyBtn.addEventListener('click', () => {
+  resultText.select();
+  document.execCommand('copy');
+  copyBtn.textContent = '✅ کپی شد';
+  setTimeout(() => { copyBtn.textContent = '📋 کپی متن'; }, 2000);
+});
+</script>
+
+</body>
+</html>
