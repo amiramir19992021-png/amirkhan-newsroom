@@ -1,24 +1,9 @@
 // api/transcribe.js
 // این فایل روی سرور Vercel اجرا می‌شه، نه توی مرورگر کاربر.
-// فایل صوتی مستقیم از فرانت‌اند به این تابع می‌رسه و از اینجا به هاگینگ‌فیس فرستاده می‌شه.
+// فایل صوتی به‌صورت Base64 داخل JSON از فرانت‌اند می‌رسه و از اینجا به هاگینگ‌فیس فرستاده می‌شه.
 // توکن هیچ‌وقت به فرانت‌اند فرستاده نمی‌شه.
 
-export const config = {
-  api: {
-    bodyParser: false // چون داده‌ی خام صوتی (باینری) می‌گیریم، نه JSON
-  }
-};
-
 export const maxDuration = 60; // اجازه بده تا ۶۰ ثانیه صبر کنه (مدل ممکنه دیر بیدار بشه)
-
-function readRawBody(req) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    req.on('data', (chunk) => chunks.push(chunk));
-    req.on('end', () => resolve(Buffer.concat(chunks)));
-    req.on('error', reject);
-  });
-}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -31,18 +16,18 @@ export default async function handler(req, res) {
   }
 
   try {
-    const audioBuffer = await readRawBody(req);
+    const { audio, mime } = req.body || {};
 
-    if (!audioBuffer || audioBuffer.length === 0) {
+    if (!audio) {
       return res.status(400).json({ error: 'فایل صوتی دریافت نشد' });
     }
 
-    const MAX_SIZE = 25 * 1024 * 1024;
+    const audioBuffer = Buffer.from(audio, 'base64');
+
+    const MAX_SIZE = 4 * 1024 * 1024;
     if (audioBuffer.length > MAX_SIZE) {
       return res.status(400).json({ error: 'حجم فایل بیش از حد مجاز است' });
     }
-
-    const contentType = req.headers['content-type'] || 'audio/mpeg';
 
     const hfRes = await fetch(
       'https://api-inference.huggingface.co/models/openai/whisper-large-v3',
@@ -50,7 +35,7 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${hfToken}`,
-          'Content-Type': contentType
+          'Content-Type': mime || 'audio/mpeg'
         },
         body: audioBuffer
       }
@@ -59,7 +44,7 @@ export default async function handler(req, res) {
     if (!hfRes.ok) {
       const errText = await hfRes.text();
       console.error('Hugging Face transcription error:', errText);
-      return res.status(502).json({ error: 'خطا در پردازش صوت. ممکن است مدل هنوز در حال بارگذاری باشد؛ چند ثانیه دیگر دوباره امتحان کن. جزئیات: ' + errText.slice(0, 200) });
+      return res.status(502).json({ error: 'خطا در پردازش صوت. جزئیات: ' + errText.slice(0, 300) });
     }
 
     const data = await hfRes.json();
