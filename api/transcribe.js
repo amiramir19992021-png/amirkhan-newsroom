@@ -58,7 +58,7 @@ export default async function handler(req, res) {
     if (!hfRes.ok) {
       const errText = await hfRes.text();
       console.error('Hugging Face transcription error:', errText);
-      return res.status(502).json({ error: 'خطا در پردازش صوت. ممکن است مدل هنوز در حال بارگذاری باشد؛ چند ثانیه دیگر دوباره امتحان کن.' });
+      return res.status(502).json({ error: 'خطا در پردازش صوت. ممکن است مدل هنوز در حال بارگذاری باشد؛ چند ثانیه دیگر دوباره امتحان کن. جزئیات: ' + errText.slice(0, 200) });
     }
 
     const data = await hfRes.json();
@@ -68,6 +68,6 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error('Server error:', err);
-    return res.status(500).json({ error: 'خطای داخلی سرور' });
+    return res.status(500).json({ error: 'خطای داخلی سرور: ' + (err && err.message ? err.message : String(err)) });
   }
 }
