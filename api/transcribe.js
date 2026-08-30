@@ -9,6 +9,8 @@ export const config = {
   }
 };
 
+export const maxDuration = 60; // اجازه بده تا ۶۰ ثانیه صبر کنه (مدل ممکنه دیر بیدار بشه)
+
 function readRawBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -35,7 +37,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'فایل صوتی دریافت نشد' });
     }
 
-    // سقف ۲۵ مگابایت (هم‌راستا با محدودیت فرانت‌اند)
     const MAX_SIZE = 25 * 1024 * 1024;
     if (audioBuffer.length > MAX_SIZE) {
       return res.status(400).json({ error: 'حجم فایل بیش از حد مجاز است' });
