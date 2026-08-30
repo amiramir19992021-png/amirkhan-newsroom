@@ -45,7 +45,7 @@ export default async function handler(req, res) {
     const contentType = req.headers['content-type'] || 'audio/mpeg';
 
     const hfRes = await fetch(
-      'https://api-inference.huggingface.co/models/C1Tech/whisper_base_persian',
+      'https://api-inference.huggingface.co/models/openai/whisper-large-v3',
       {
         method: 'POST',
         headers: {
