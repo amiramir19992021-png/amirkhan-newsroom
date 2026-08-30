@@ -40,8 +40,9 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           inputs: audio, // همون Base64 اصلی، بدون تبدیل به Buffer
           parameters: {
-            language: 'fa',
-            task: 'transcribe'
+            generate_kwargs: {
+              language: 'fa'
+            }
           }
         })
       }
