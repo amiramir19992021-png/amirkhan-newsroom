@@ -161,14 +161,14 @@
   <div class="header">
     <h1>🎙️ اتاق خبرنگار</h1>
     <p>نسخه‌ی آزمایشی — تبدیل صوت مصاحبه به متن فارسی</p>
-    <span class="badge">⚠️ نسخه آزمایشی، نه نهایی</span>
+    <span class="badge">⚠️ نسخه آزمایشی — حداکثر ۴ مگابایت</span>
   </div>
 
   <div class="card">
     <div class="upload-zone" id="uploadZone">
       <div class="icon">🎤</div>
       <div class="text">برای آپلود فایل صوتی ضربه بزن</div>
-      <div class="hint">فرمت‌های مجاز: mp3, wav, m4a — حداکثر ۲۵ مگابایت</div>
+      <div class="hint">فرمت‌های مجاز: mp3, wav, m4a — حداکثر ۴ مگابایت</div>
     </div>
     <input type="file" id="fileInput" accept=".mp3,.wav,.m4a,audio/*">
 
@@ -206,7 +206,7 @@ const resultText = document.getElementById('resultText');
 const copyBtn = document.getElementById('copyBtn');
 
 let selectedFile = null;
-const MAX_SIZE = 25 * 1024 * 1024; // 25MB
+const MAX_SIZE = 4 * 1024 * 1024; // 4MB (به‌خاطر محدودیت حجم درخواست در Vercel)
 
 uploadZone.addEventListener('click', () => fileInput.click());
 
@@ -217,7 +217,7 @@ fileInput.addEventListener('change', (e) => {
 function handleFile(file) {
   errorBox.classList.remove('show');
   if (file.size > MAX_SIZE) {
-    showError('حجم فایل بیش از ۲۵ مگابایت است. لطفاً فایل کوچک‌تری انتخاب کن.');
+    showError('حجم فایل بیش از ۴ مگابایت است (فعلاً در این نسخه‌ی آزمایشی). لطفاً فایل کوتاه‌تری انتخاب کن.');
     return;
   }
   selectedFile = file;
@@ -241,12 +241,23 @@ submitBtn.addEventListener('click', async () => {
   resultBox.classList.remove('show');
 
   try {
-    const formData = new FormData();
-    formData.append('audio', selectedFile);
+    // فایل رو به Base64 تبدیل می‌کنیم و به‌صورت JSON می‌فرستیم
+    const base64Audio = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = () => reject(new Error('خطا در خواندن فایل'));
+      reader.readAsDataURL(selectedFile);
+    });
 
     const res = await fetch('/api/transcribe', {
       method: 'POST',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        audio: base64Audio,
+        mime: selectedFile.type || 'audio/mpeg'
+      })
     });
 
     statusBox.classList.remove('show');
