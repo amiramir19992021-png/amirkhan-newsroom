@@ -30,14 +30,20 @@ export default async function handler(req, res) {
     }
 
     const hfRes = await fetch(
-      'https://router.huggingface.co/hf-inference/models/openai/whisper-large-v3',
+      'https://router.huggingface.co/hf-inference/models/openai/whisper-large-v3?wait_for_model=true',
       {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${hfToken}`,
-          'Content-Type': mime || 'audio/mpeg'
+          'Content-Type': 'application/json'
         },
-        body: audioBuffer
+        body: JSON.stringify({
+          inputs: audio, // همون Base64 اصلی، بدون تبدیل به Buffer
+          parameters: {
+            language: 'fa',
+            task: 'transcribe'
+          }
+        })
       }
     );
 
